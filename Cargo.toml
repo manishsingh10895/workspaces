@@ -1,0 +1,21 @@
+[package]
+name = "ws"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+assert_cmd = "2.0.7"
+colored = "2.0.0"
+ctor = "0.1.26"
+dirs = "4.0.0"
+exitfailure = "0.5.1"
+failure = "0.1.8"
+structopt = "0.3.26"
+thiserror = "1.0.38"
+prettytable-rs = "0.10.0"
+
+[dependencies.rusqlite]
+version  = "0.28.0"
+features = ['bundled']
