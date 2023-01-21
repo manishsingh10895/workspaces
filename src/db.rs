@@ -57,7 +57,7 @@ pub fn initialize_db() -> Result<()> {
     Ok(())
 }
 
-fn connect_db() -> Result<Connection> {
+pub fn connect_db() -> Result<Connection> {
     let path = home_dir().unwrap();
     let path = path.to_str().unwrap();
     let path = format!("{}{}", path, "/workspaces.db");
@@ -232,44 +232,71 @@ pub fn fetch_workspace_with_dirs_by_name(name: &str) -> Option<Workspace> {
     }
 }
 
-#[allow(dead_code)]
-pub fn fetch_all_workspaces_with_dirs() -> Vec<Workspace> {
+pub fn _fetch_all_workspaces_with_dirs() -> Result<Vec<Workspace>> {
     let conn = connect_db().unwrap();
 
     let mut stmt = conn
         .prepare(
             "SELECT w.name, w.id, d.path from workspaces w
+                LEFT JOIN dirs d
+                ON d.workspaceId == w.id",
+        )
+        .unwrap();
+
+    let _items = stmt.query_map(params![], |x| {
+        let val: String = x.get(0).unwrap();
+        let id: i32 = x.get(1).unwrap();
+        let path: String = x.get(2).unwrap_or(String::from("None"));
+
+        println!("{:?} {:?} {:?}", val, id, path);
+        Ok(val)
+    })?;
+
+    println!("{:?}", _items.count());
+
+    Ok(vec![])
+}
+
+/// Queries the database and returns a Vec of Workspace
+/// with the related directories built in
+pub fn fetch_all_workspaces_with_dirs() -> Result<Vec<Workspace>> {
+    let conn = connect_db()?;
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT w.name, w.id, d.path from workspaces w
             LEFT JOIN dirs d
-            ON d.workspaceId == w.id
-        ",
+            ON d.workspaceId == w.id",
         )
         .unwrap();
 
     let mut workspaces: Vec<Workspace> = vec![];
 
-    let _ = stmt
-        .query_map([], |x| {
+    let _items = stmt
+        .query_map(params![], |x| {
             let val: String = x.get(0).unwrap();
             let id: i32 = x.get(1).unwrap();
             let path: String = x.get(2).unwrap_or(String::from("None"));
 
-            if let Some(position) = workspaces.iter().position(|w| w.get_id() == id) {
-                let ws = workspaces.get_mut(position).unwrap();
-                ws.add_dir(Dir::new(path));
-            } else {
-                let space: Workspace;
-                let mut ws = Workspace::new(val.clone());
-                ws.set_id(id);
-                ws.add_dir(Dir::new(path));
-                space = ws;
-                workspaces.push(space);
+            Ok((val, id, path))
+        })?
+        .for_each(|value_res| {
+            if let Ok((val, id, path)) = value_res {
+                if let Some(position) = workspaces.iter().position(|w| w.get_id() == id) {
+                    let ws = workspaces.get_mut(position).unwrap();
+                    ws.add_dir(Dir::new(path));
+                } else {
+                    let space: Workspace;
+                    let mut ws = Workspace::new(val.clone());
+                    ws.set_id(id);
+                    ws.add_dir(Dir::new(path));
+                    space = ws;
+                    workspaces.push(space);
+                }
             }
+        });
 
-            return Ok(val);
-        })
-        .unwrap();
-
-    return workspaces;
+    return Ok(workspaces);
 }
 
 #[cfg(test)]
@@ -311,6 +338,32 @@ mod tests {
         )?;
 
         Ok(conn)
+    }
+
+    #[test]
+    fn test_list_workspaces() -> Result<()> {
+        let conn = connect_db()?;
+
+        let mut stmt = conn
+            .prepare(
+                "SELECT w.name, w.id, d.path from workspaces w
+                LEFT JOIN dirs d
+                ON d.workspaceId == w.id",
+            )
+            .unwrap();
+
+        let _items = stmt.query_map(params![], |x| {
+            let val: String = x.get(0).unwrap();
+            let id: i32 = x.get(1).unwrap();
+            let path: String = x.get(2).unwrap_or(String::from("None"));
+
+            println!("{:?} {:?} {:?}", val, id, path);
+            Ok(val)
+        })?;
+
+        println!("{:?}", _items.count());
+
+        Ok(())
     }
 
     #[test]

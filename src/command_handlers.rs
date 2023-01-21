@@ -27,9 +27,7 @@ pub fn open_workspace(name: String) -> Result<(), Error> {
 /// List all workspaces
 /// and prints them to std out
 pub fn print_workspaces() -> Result<(), Error> {
-    let spaces = db::fetch_all_workspaces_with_dirs();
-
-    println!("{:?}", spaces);
+    let spaces = db::fetch_all_workspaces_with_dirs().unwrap();
 
     let mut table = Table::new();
 
@@ -117,8 +115,6 @@ mod tests {
     #[test]
     fn test_list_workspaces() {
         db::initialize_db().expect("Error Initializing databsae");
-
-        print_workspaces().expect("Priting error");
     }
 
     #[test]
