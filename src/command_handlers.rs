@@ -46,7 +46,7 @@ pub fn print_workspaces() -> Result<(), Error> {
 }
 
 pub fn update_editor(name: String) -> Result<(), Error> {
-    db::update_editor(name);
+    let _ = db::update_editor(name);
 
     Ok(())
 }
@@ -94,7 +94,6 @@ pub fn add_workspace(w_name: Option<String>, path: Option<PathBuf>) -> Result<us
 /// Add a directory to a workspace
 pub fn add_dir_to_workspace(w_name: String, path: PathBuf) -> Result<(), Error> {
     if let Some(workspace) = db::fetch_workspace_with_dirs_by_name(&w_name) {
-        println!("Workspace {:?}", workspace);
         let canonical = utils::get_canonical_path(path);
         if let Ok(_) = db::insert_new_dir_for_workspace(workspace.get_id(), canonical) {
             ()
@@ -112,8 +111,6 @@ pub fn add_dir_to_workspace(w_name: String, path: PathBuf) -> Result<(), Error> 
 #[cfg(test)]
 mod tests {
     use crate::db;
-
-    use super::print_workspaces;
 
     #[test]
     fn test_list_workspaces() {

@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Command};
+use std::path::PathBuf;
 
 pub fn get_canonical_path(path: PathBuf) -> String {
     return std::fs::canonicalize(path)
@@ -6,12 +6,4 @@ pub fn get_canonical_path(path: PathBuf) -> String {
         .to_str()
         .unwrap()
         .to_string();
-}
-
-// Opens vscode for the give path
-pub fn open_code_editor(path: &str) {
-    Command::new("code")
-        .args([format!("{}", path)])
-        .output()
-        .expect("Failed to open directory");
 }

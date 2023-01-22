@@ -32,7 +32,7 @@ enum Operation {
     },
     #[structopt(about = "Add new workspace")]
     Add {
-        #[structopt(short = "p", parse(from_os_str))]
+        #[structopt(short = "p", long = "path", parse(from_os_str))]
         path: Option<PathBuf>,
 
         #[structopt(short = "n", long = "name")]
@@ -64,7 +64,7 @@ enum Operation {
 enum DirOperation {
     #[structopt(about = "about add a directory to a workspace")]
     Add {
-        #[structopt(short = "p", parse(from_os_str))]
+        #[structopt(short = "p", long = "path", parse(from_os_str))]
         path: PathBuf,
     },
 }

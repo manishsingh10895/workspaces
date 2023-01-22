@@ -425,9 +425,9 @@ mod tests {
 
     #[test]
     fn test_update_editor() -> Result<()> {
-        let conn = connect_db()?;
+        let _conn = connect_db()?;
 
-        let d = update_editor(String::from("code"))?;
+        let _d = update_editor(String::from("code"))?;
 
         Ok(())
     }
