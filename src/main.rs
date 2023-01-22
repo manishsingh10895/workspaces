@@ -43,6 +43,11 @@ enum Operation {
         #[structopt(short = "n", long = "name")]
         name: String,
     },
+    #[structopt(about = "change default editor")]
+    Editor {
+        #[structopt(short = "n", long = "name")]
+        name: String,
+    },
     #[structopt(about = "list all workspaces")]
     List,
     #[structopt(about = "Dir operations")]
@@ -84,6 +89,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Operation::Open { workspace } => {
             command_handlers::open_workspace(workspace).expect("Error opening workspace")
+        }
+        Operation::Editor { name } => {
+            command_handlers::update_editor(name.clone()).expect("Error updating editor");
+            println!("Editor updated to {}", name);
         }
         Operation::Dir {
             workspace,

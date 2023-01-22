@@ -32,6 +32,16 @@ pub fn initialize_db() -> Result<()> {
 
     conn.execute(
         "
+        CREATE TABLE editor (
+            id      INTEGER PRIMARY KEY AUTOINCREMENT,
+            editor  TEXT NOT NULL
+        )
+    ",
+        params![],
+    )?;
+
+    conn.execute(
+        "
     CREATE TABLE workspaces (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
         name    TEXT UNIQUE NOT NULL
@@ -95,6 +105,53 @@ pub fn delete_workspace(name: String) -> Result<()> {
     let mut stmt = conn.prepare("DELETE from workspaces WHERE name = ?1")?;
 
     stmt.execute(params![name]).map(|_| ())
+}
+
+/// Update default editor which should open
+/// on opening a workspace
+pub fn update_editor(editor: String) -> Result<()> {
+    let conn = connect_db()?;
+
+    let mut get_stmt = conn.prepare("SELECT COUNT(*) from editor")?;
+
+    let count = get_stmt.query_row(params![], |row| row.get(0) as Result<i32>)?;
+
+    if count == 0 {
+        let mut create_stmt = conn.prepare(
+            "
+    INSERT INTO editor(editor) VALUES('code');
+",
+        )?;
+
+        create_stmt.execute(params![])?;
+    } else {
+        let mut stmt = conn.prepare("UPDATE editor SET editor = ?1")?;
+
+        stmt.execute(params![editor])?;
+    }
+
+    Ok(())
+}
+
+/// Get default workspace open editor
+pub fn get_editor() -> Result<String> {
+    let conn = connect_db()?;
+
+    let mut stmt = conn.prepare("SELECT editor FROM editor")?;
+
+    let result = stmt.query_row(params![], |row| {
+        let editor: String = row.get(0).unwrap();
+
+        Ok(editor)
+    });
+
+    println!("RESULT {:?}", result);
+
+    if let Ok(editor) = result {
+        return Ok(editor);
+    } else {
+        return Ok("code".to_string());
+    }
 }
 
 #[allow(dead_code)]
@@ -362,6 +419,15 @@ mod tests {
         })?;
 
         println!("{:?}", _items.count());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_editor() -> Result<()> {
+        let conn = connect_db()?;
+
+        let d = update_editor(String::from("code"))?;
 
         Ok(())
     }

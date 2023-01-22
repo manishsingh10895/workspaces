@@ -1,6 +1,8 @@
 use colored::*;
 use std::{process::Command, usize, vec};
 
+use crate::db;
+
 #[derive(Debug)]
 pub struct Dir {
     pub id: i32,
@@ -103,7 +105,7 @@ impl Workspace {
 
     pub fn id(self, id: i32) -> Self {
         Workspace {
-            id: id,
+            id,
             dirs: self.dirs,
             name: self.name,
         }
@@ -111,12 +113,16 @@ impl Workspace {
 }
 
 pub fn open_workspace(workspace: Workspace) {
+    let editor = db::get_editor().unwrap();
+    println!("Opening workspace using editor {}", editor);
     workspace.dir_iter().for_each(|d| {
-        let cmd = Command::new(SHELL).args(&["code", &d.path.clone()]).spawn();
+        let cmd = Command::new(SHELL)
+            .args(&[editor.clone(), d.path.clone()])
+            .spawn();
 
         match cmd {
             Ok(child) => {
-                print!("Code Instance Spawned for {} :> {}", d.path, child.id());
+                print!("Editor Instance Spawned for {} :> {}", d.path, child.id());
             }
             Err(e) => {
                 println!("{}", e);
@@ -127,6 +133,8 @@ pub fn open_workspace(workspace: Workspace) {
 
 #[cfg(test)]
 mod tests {
+    use crate::db;
+
     use super::Workspace;
 
     use super::Dir;
@@ -143,6 +151,13 @@ mod tests {
         w.add_dir(Dir::new("Temple".to_string()));
 
         w
+    }
+
+    #[test]
+    fn test_get_editor() {
+        let editor = db::get_editor().unwrap();
+
+        println!("editor {}", editor);
     }
 
     #[test]

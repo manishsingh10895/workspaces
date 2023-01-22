@@ -13,9 +13,6 @@ pub fn open_workspace(name: String) -> Result<(), Error> {
 
     if let Some(space) = ws {
         workspace::open_workspace(space);
-        // space.dir_iter().for_each(|dir| {
-        //     utils::open_code_editor(&dir.path);
-        // });
     } else {
         eprintln!("Workspace not found");
         return Err(Error::DbError(String::from("Not Found")));
@@ -44,6 +41,12 @@ pub fn print_workspaces() -> Result<(), Error> {
     }
 
     table.printstd();
+
+    Ok(())
+}
+
+pub fn update_editor(name: String) -> Result<(), Error> {
+    db::update_editor(name);
 
     Ok(())
 }
