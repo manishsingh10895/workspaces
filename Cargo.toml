@@ -15,6 +15,7 @@ failure = "0.1.8"
 structopt = "0.3.26"
 thiserror = "1.0.38"
 prettytable-rs = "0.10.0"
+inquire = "0.5.3"
 
 [dependencies.rusqlite]
 version  = "0.28.0"

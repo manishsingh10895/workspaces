@@ -6,7 +6,8 @@ use crate::db;
 #[derive(Debug)]
 pub struct Dir {
     pub id: i32,
-    pub init: Option<String>,
+    pub init: Option<String>, // init is for a script which will run on this path (currently
+    // unavailable)
     pub path: String,
 }
 
@@ -82,7 +83,10 @@ impl Workspace {
         match value {
             Some(index) => {
                 self.dirs.remove(index);
-                println!("Directory Removed from Workspace");
+                println!(
+                    "{}",
+                    "Directory Removed from Workspace".to_string().yellow()
+                );
             }
             None => {
                 println!(

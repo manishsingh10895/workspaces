@@ -67,6 +67,8 @@ enum DirOperation {
         #[structopt(short = "p", long = "path", parse(from_os_str))]
         path: PathBuf,
     },
+    #[structopt(about = "Delete a directory from a workspace")]
+    Del,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -100,6 +102,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => match dir_operation {
             DirOperation::Add { path } => {
                 command_handlers::add_dir_to_workspace(workspace, path)?;
+            }
+            DirOperation::Del => {
+                command_handlers::remove_dir_from_workspace(workspace)?;
             }
         },
     }

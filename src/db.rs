@@ -154,6 +154,7 @@ pub fn get_editor() -> Result<String> {
     }
 }
 
+/// Fetches `Dir` for `Workspace` with Id
 #[allow(dead_code)]
 pub fn get_dirs_for_workspace(workspace_id: i32) -> Result<Vec<(i32, String)>> {
     let conn = connect_db()?;

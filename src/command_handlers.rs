@@ -1,7 +1,11 @@
-use crate::errors::Error;
+use crate::errors::{self, Error};
 use crate::utils;
-use crate::workspace::Workspace;
+use crate::workspace::{Dir, Workspace};
 use crate::{db, workspace};
+use colored::Colorize;
+use inquire::list_option::ListOption;
+use inquire::ui::{IndexPrefix, RenderConfig};
+use inquire::Select;
 use prettytable::Table;
 use std::fs;
 use std::path::PathBuf;
@@ -103,6 +107,49 @@ pub fn add_dir_to_workspace(w_name: String, path: PathBuf) -> Result<(), Error> 
     } else {
         eprintln!("Cannot find workspace with name {}", w_name);
         return Err(Error::DbError(String::from("Not found")));
+    }
+
+    Ok(())
+}
+
+/// Remove a directory from a workspace :`w_name`
+pub fn remove_dir_from_workspace(w_name: String) -> Result<(), Error> {
+    if let Some(ws) = db::fetch_workspace_with_dirs_by_name(&w_name) {
+        // store a reference of all the directories in the workspace
+        let dirs: Vec<&Dir> = ws.dir_iter().collect();
+
+        // map the directories to `inquire` options
+        let options = ws
+            .dir_iter()
+            .enumerate()
+            .map(|(i, dir)| ListOption::new(i as usize, &dir.path))
+            .collect();
+
+        let mut render_config = RenderConfig::default_colored();
+        render_config.option_index_prefix = IndexPrefix::Simple;
+
+        let ans = Select::new("Select the directory to delete", options)
+            .with_render_config(render_config)
+            .prompt();
+
+        if let Ok(ans) = ans {
+            let index = ans.index;
+
+            let dir = dirs[index];
+
+            return match db::remove_dir_from_workspace(dir.id) {
+                Ok(_) => {
+                    println!("{}", "Directory deleted".green());
+                    Ok(())
+                }
+                Err(er) => {
+                    println!("{}", "Error while removing directoy".red());
+                    Err(Error::DbError(er.to_string()))
+                }
+            };
+        } else {
+            println!("{}", "No directory selected".yellow());
+        }
     }
 
     Ok(())
