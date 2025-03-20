@@ -69,6 +69,8 @@ enum DirOperation {
     },
     #[structopt(about = "Delete a directory from a workspace")]
     Del,
+    #[structopt(about = "Set Init Script")]
+    Init,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -105,6 +107,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             DirOperation::Del => {
                 command_handlers::remove_dir_from_workspace(workspace)?;
+            }
+            DirOperation::Init => {
             }
         },
     }

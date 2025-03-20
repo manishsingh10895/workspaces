@@ -60,16 +60,66 @@ pub fn delete_workspace(w_name: String) {
     db::delete_workspace(w_name).expect("Error deleting workspace");
 }
 
+pub fn set_init_script(
+    w_name: String,
+    dir: String,
+    init: Option<String>,
+) -> Result<(), Error> {
+    let ws = db::fetch_workspace_with_dirs_by_name(&w_name);
+
+    Ok(())
+}
+
 /// Add a new workspace
 pub fn add_workspace(w_name: Option<String>, path: Option<PathBuf>) -> Result<usize, Error> {
     let path = path.unwrap_or(PathBuf::from("."));
 
+    println!("Path: {}", path.display());
     let canonical = fs::canonicalize(path).unwrap();
+
+    println!("Canonical Path: {}", canonical.display());
 
     // get the current directory name
     let dir_name = canonical.to_str().unwrap().split("/").last().unwrap();
 
     let w_name = w_name.unwrap_or(dir_name.to_string());
+
+    // check if the workspace already exists
+    let already = db::fetch_workspace_with_dirs_by_name(&w_name);
+
+    if already.is_some() {
+        // add the directory to the workspace
+        let ws = already.unwrap();
+        if let Some(canonical_str) = canonical.to_str() {
+            let dir_exists = ws.check_dir_already_exists(canonical_str);
+            if dir_exists.is_some() {
+                eprintln!(
+                    "{}",
+                    format!(
+                        "Directory {} already exists in workspace {}",
+                        canonical.to_str().unwrap(),
+                        ws.name
+                    )
+                    .red()
+                );
+                return Err(Error::DbError(String::from("Already Exists")));
+            } else {
+                // add the directory to the workspace
+                let _ = db::insert_new_dir_for_workspace(ws.get_id(), String::from(canonical_str));
+                println!(
+                    "{}",
+                    format!(
+                        "Directory {} added to workspace {}",
+                        canonical.to_str().unwrap(),
+                        ws.name
+                    )
+                    .green()
+                );
+                return Ok(ws.get_id() as usize);
+            }
+        }
+        // check if the directory already exists in the workspace
+    }
 
     match db::insert_new_workspace(Workspace::new(w_name)) {
         Ok(id) => {

@@ -1,7 +1,7 @@
-use colored::*;
-use std::{process::Command, usize, vec};
-
 use crate::db;
+use colored::*;
+use std::env;
+use std::{process::Command, usize, vec};
 
 #[derive(Debug)]
 pub struct Dir {
@@ -34,12 +34,13 @@ impl Dir {
             init: None,
         }
     }
-
+    #[allow(dead_code)]
     pub fn id(mut self, id: i32) -> Dir {
         self.id = id;
         self
     }
 
+    #[allow(dead_code)]
     pub fn init<'a>(&'a mut self, script: String) -> &'a mut Self {
         self.init = Some(script);
 
@@ -69,7 +70,7 @@ impl Workspace {
     /// Checks if a directory exists in a workspace
     /// Returns position [`Option<usize>`] of the directory is exists
     /// Else return [`None`]
-    fn check_dir_already_exists(&self, dir: &str) -> Option<usize> {
+    pub fn check_dir_already_exists(&self, dir: &str) -> Option<usize> {
         self.dirs.iter().position(|x| x.path == dir)
     }
 
@@ -119,10 +120,16 @@ impl Workspace {
 pub fn open_workspace(workspace: Workspace) {
     let editor = db::get_editor().unwrap();
     println!("Opening workspace using editor {}", editor);
+
+    let os = env::consts::OS;
+
     workspace.dir_iter().for_each(|d| {
-        let cmd = Command::new(SHELL)
-            .args(&[editor.clone(), d.path.clone()])
-            .spawn();
+        let formatted_cmd = format!("{} \"{}\"", editor, d.path);
+        let args = match os {
+            "windows" => vec!["-Command", formatted_cmd.as_str()],
+            _ => vec!["-c", formatted_cmd.as_str()],
+        };
+        let cmd = Command::new(SHELL).args(args).spawn();
 
         match cmd {
             Ok(child) => {
